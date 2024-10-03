@@ -1,4 +1,4 @@
-import { Rider, Driver, Reservation } from '../src/uber/Reservation'
+import { Rider, Driver, Ride } from '../src/uber/Ride'
 
 describe('Rider Reservation', () => {
     test('should allow a rider to make a reservation if they have enough balance and no active reservation', () => {
@@ -10,7 +10,7 @@ describe('Rider Reservation', () => {
             activeReservation: null,
         }
 
-        const reservation = new Reservation(rider, 'Paris')
+        const reservation = new Ride(rider, 'Paris')
 
         expect(rider.balance).toBeGreaterThanOrEqual(2)
         expect(rider.activeReservation).toBeNull()
@@ -26,7 +26,7 @@ describe('Rider Reservation', () => {
             activeReservation: null,
         }
 
-        rider.activeReservation = new Reservation(rider, 'Paris')
+        rider.activeReservation = new Ride(rider, 'Paris')
 
         expect(rider.activeReservation).not.toBeNull()
         expect(() => {
@@ -64,7 +64,7 @@ describe('Rider Reservation', () => {
             activeReservation: null,
         }
 
-        const reservation = new Reservation(rider, 'Paris')
+        const reservation = new Ride(rider, 'Paris')
         const driver: Driver = {
             id: 'driver1',
             name: 'Driver1',
@@ -88,12 +88,12 @@ describe('Rider Reservation', () => {
             activeReservation: null,
         }
 
-        rider.activeReservation = new Reservation(rider, 'Paris')
+        rider.activeReservation = new Ride(rider, 'Paris')
         rider.activeReservation = null
-        const newReservation = new Reservation(rider, 'Paris')
+        const newReservation = new Ride(rider, 'Paris')
 
         expect(rider.activeReservation).toBeNull()
-        expect(newReservation).toBeInstanceOf(Reservation)
+        expect(newReservation).toBeInstanceOf(Ride)
         expect(newReservation.destination).toBe('Paris')
     })
 
@@ -107,7 +107,7 @@ describe('Rider Reservation', () => {
             activeReservation: null,
         }
 
-        const reservation = new Reservation(rider, 'Paris')
+        const reservation = new Ride(rider, 'Paris')
         rider.activeReservation = reservation
 
         const cancellationMessage = reservation.cancel()
@@ -135,7 +135,7 @@ describe('Rider Reservation', () => {
             isOnTheWay: true,
         }
 
-        const reservation = new Reservation(rider, 'Paris')
+        const reservation = new Ride(rider, 'Paris')
         reservation.assignDriver(driver)
         rider.activeReservation = reservation
 
@@ -155,7 +155,7 @@ describe('Rider Reservation', () => {
             activeReservation: null,
         }
 
-        const reservation = new Reservation(rider, 'Paris')
+        const reservation = new Ride(rider, 'Paris')
         rider.activeReservation = reservation
 
         const cancellationMessage = reservation.cancel()
@@ -181,7 +181,7 @@ describe('Rider Reservation', () => {
             isOnTheWay: false,
         }
 
-        const reservation = new Reservation(rider, 'Paris')
+        const reservation = new Ride(rider, 'Paris')
         reservation.assignDriver(driver)
         rider.activeReservation = reservation
 
@@ -190,5 +190,24 @@ describe('Rider Reservation', () => {
         expect(cancellationMessage).toBe('Reservation canceled.')
         expect(rider.balance).toBe(100)
         expect(reservation.isCanceled).toBe(true)
+    })
+
+    test('should prevent the rider from canceling a reservation that has already been canceled', () => {
+        const rider: Rider = {
+            id: 'rider4',
+            name: 'John',
+            balance: 100,
+            birthday: new Date('1989-10-02'),
+            activeReservation: null,
+        }
+
+        const reservation = new Ride(rider, 'Paris')
+        rider.activeReservation = reservation
+
+        reservation.cancel()
+
+        expect(() => {
+            reservation.cancel()
+        }).toThrow('Reservation is already canceled.')
     })
 })
