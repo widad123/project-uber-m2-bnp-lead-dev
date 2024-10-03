@@ -5,7 +5,7 @@ exports.up = function (knex: Knex) {
         table.uuid('id').primary()
         table.string('name').notNullable()
         table.boolean('available').defaultTo(true)
-        table.float('rating').notNullable()
+        table.boolean('is_on_the_way')
     })
 }
 

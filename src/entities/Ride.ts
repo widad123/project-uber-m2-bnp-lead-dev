@@ -5,14 +5,21 @@ export class Ride {
     rider: Rider
     driver: Driver | null
     destination: string
+    distance: number
     price: number
     isCanceled: boolean
     date: Date
 
-    constructor(rider: Rider, destination: string, date: Date = new Date()) {
+    constructor(
+        rider: Rider,
+        destination: string,
+        distance: number,
+        date: Date = new Date()
+    ) {
         this.rider = rider
         this.destination = destination
         this.driver = null
+        this.distance = distance
         this.price = 0
         this.isCanceled = false
         this.date = date

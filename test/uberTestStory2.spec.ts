@@ -1,6 +1,6 @@
-import { Ride } from '../src/uber/Ride'
-import { Rider } from '../src/uber/Rider'
-import { Driver } from '../src/uber/Driver'
+import { Ride } from '../src/entities/Ride'
+import { Rider } from '../src/entities/Rider'
+import { Driver } from '../src/entities/Driver'
 
 describe('Rider Reservation', () => {
     test('should allow a rider to cancel the reservation for free on their birthday', () => {
@@ -13,7 +13,7 @@ describe('Rider Reservation', () => {
             activeReservation: null,
         }
 
-        const reservation = new Ride(rider, 'Paris')
+        const reservation = new Ride(rider, 'Paris', 10)
         rider.activeReservation = reservation
 
         const cancellationMessage = reservation.cancel()
@@ -41,7 +41,7 @@ describe('Rider Reservation', () => {
             isOnTheWay: true,
         }
 
-        const reservation = new Ride(rider, 'Paris')
+        const reservation = new Ride(rider, 'Paris', 10)
         reservation.assignDriver(driver)
         rider.activeReservation = reservation
 
@@ -61,7 +61,7 @@ describe('Rider Reservation', () => {
             activeReservation: null,
         }
 
-        const reservation = new Ride(rider, 'Paris')
+        const reservation = new Ride(rider, 'Paris', 10)
         rider.activeReservation = reservation
 
         const cancellationMessage = reservation.cancel()
@@ -87,7 +87,7 @@ describe('Rider Reservation', () => {
             isOnTheWay: false,
         }
 
-        const reservation = new Ride(rider, 'Paris')
+        const reservation = new Ride(rider, 'Paris', 10)
         reservation.assignDriver(driver)
         rider.activeReservation = reservation
 
@@ -107,7 +107,7 @@ describe('Rider Reservation', () => {
             activeReservation: null,
         }
 
-        const reservation = new Ride(rider, 'Paris')
+        const reservation = new Ride(rider, 'Paris', 10)
         rider.activeReservation = reservation
 
         reservation.cancel()

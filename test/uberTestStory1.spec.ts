@@ -1,6 +1,6 @@
-import { Ride } from '../src/uber/Ride'
-import { Rider } from '../src/uber/Rider'
-import { Driver } from '../src/uber/Driver'
+import { Ride } from '../src/entities/Ride'
+import { Rider } from '../src/entities/Rider'
+import { Driver } from '../src/entities/Driver'
 
 describe('Rider Reservation', () => {
     test('should allow a rider to make a reservation if they have enough balance and no active reservation', () => {
@@ -12,7 +12,7 @@ describe('Rider Reservation', () => {
             activeReservation: null,
         }
 
-        const reservation = new Ride(rider, 'Paris')
+        const reservation = new Ride(rider, 'Paris', 10)
 
         expect(rider.balance).toBeGreaterThanOrEqual(2)
         expect(rider.activeReservation).toBeNull()
@@ -28,7 +28,7 @@ describe('Rider Reservation', () => {
             activeReservation: null,
         }
 
-        rider.activeReservation = new Ride(rider, 'Paris')
+        rider.activeReservation = new Ride(rider, 'Paris', 10)
 
         expect(rider.activeReservation).not.toBeNull()
         expect(() => {
@@ -66,7 +66,7 @@ describe('Rider Reservation', () => {
             activeReservation: null,
         }
 
-        const reservation = new Ride(rider, 'Paris')
+        const reservation = new Ride(rider, 'Paris', 10)
         const driver: Driver = {
             id: 'driver1',
             name: 'Driver1',
@@ -89,9 +89,9 @@ describe('Rider Reservation', () => {
             activeReservation: null,
         }
 
-        rider.activeReservation = new Ride(rider, 'Paris')
+        rider.activeReservation = new Ride(rider, 'Paris', 10)
         rider.activeReservation = null
-        const newReservation = new Ride(rider, 'Paris')
+        const newReservation = new Ride(rider, 'Paris', 10)
 
         expect(rider.activeReservation).toBeNull()
         expect(newReservation).toBeInstanceOf(Ride)
