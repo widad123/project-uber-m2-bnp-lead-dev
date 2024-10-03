@@ -95,4 +95,26 @@ describe('Rider Reservation', () => {
         expect(newReservation).toBeInstanceOf(Reservation)
         expect(newReservation.destination).toBe('Paris')
     })
+
+    test('should allow a rider to cancel the reservation for free on their birthday', () => {
+        const today = new Date()
+        const rider: Rider = {
+            id: 'rider1',
+            name: 'Khati',
+            balance: 100,
+            birthday: today,
+            activeReservation: null,
+        }
+
+        const reservation = new Reservation(rider, 'Paris')
+        rider.activeReservation = reservation
+
+        const cancellationMessage = reservation.cancel()
+
+        expect(cancellationMessage).toBe(
+            "Cancellation is free because it's your birthday!"
+        )
+        expect(rider.balance).toBe(100)
+        expect(reservation.isCanceled).toBe(true)
+    })
 })
