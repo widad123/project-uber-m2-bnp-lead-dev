@@ -143,4 +143,23 @@ describe('Rider Reservation', () => {
         expect(rider.balance).toBe(95)
         expect(reservation.isCanceled).toBe(true)
     })
+
+    test('should allow a rider to cancel the reservation without penalty if the driver is not assigned', () => {
+        const rider: Rider = {
+            id: 'rider3',
+            name: 'John',
+            balance: 100,
+            birthday: new Date('1989-10-01'),
+            activeReservation: null,
+        }
+
+        const reservation = new Reservation(rider, 'Paris')
+        rider.activeReservation = reservation
+
+        const cancellationMessage = reservation.cancel()
+
+        expect(cancellationMessage).toBe('Reservation canceled.')
+        expect(rider.balance).toBe(100)
+        expect(reservation.isCanceled).toBe(true)
+    })
 })
