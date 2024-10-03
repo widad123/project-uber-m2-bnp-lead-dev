@@ -69,6 +69,7 @@ describe('Rider Reservation', () => {
             id: 'driver1',
             name: 'Driver1',
             available: true,
+            isOnTheWay: false,
         }
 
         expect(reservation.isConfirmed()).toBe(false)
@@ -131,6 +132,7 @@ describe('Rider Reservation', () => {
             id: 'driver1',
             name: 'Driver1',
             available: true,
+            isOnTheWay: true,
         }
 
         const reservation = new Reservation(rider, 'Paris')
@@ -154,6 +156,33 @@ describe('Rider Reservation', () => {
         }
 
         const reservation = new Reservation(rider, 'Paris')
+        rider.activeReservation = reservation
+
+        const cancellationMessage = reservation.cancel()
+
+        expect(cancellationMessage).toBe('Reservation canceled.')
+        expect(rider.balance).toBe(100)
+        expect(reservation.isCanceled).toBe(true)
+    })
+
+    test('should allow a rider to cancel the reservation without penalty if the driver is assigned but not yet on the way', () => {
+        const rider: Rider = {
+            id: 'rider5',
+            name: 'John',
+            balance: 100,
+            birthday: new Date('1989-10-01'),
+            activeReservation: null,
+        }
+
+        const driver: Driver = {
+            id: 'driver2',
+            name: 'Driver2',
+            available: true,
+            isOnTheWay: false,
+        }
+
+        const reservation = new Reservation(rider, 'Paris')
+        reservation.assignDriver(driver)
         rider.activeReservation = reservation
 
         const cancellationMessage = reservation.cancel()

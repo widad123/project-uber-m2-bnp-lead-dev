@@ -10,6 +10,7 @@ export interface Driver {
     id: string
     name: string
     available: boolean
+    isOnTheWay: boolean
 }
 
 export class Reservation {
@@ -50,7 +51,7 @@ export class Reservation {
             return "Cancellation is free because it's your birthday!"
         }
 
-        if (this.driver) {
+        if (this.driver && this.driver.isOnTheWay) {
             this.rider.balance -= 5
         }
 
