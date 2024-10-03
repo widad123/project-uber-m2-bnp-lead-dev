@@ -1,0 +1,3 @@
+/node_modules
+/coverage
+/docker-postgresql-data-for-dev
