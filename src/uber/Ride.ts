@@ -1,31 +1,21 @@
-export interface Rider {
-    id: string
-    name: string
-    balance: number
-    birthday: Date
-    activeReservation: Reservation | null
-}
+import { Rider } from './Rider'
+import { Driver } from './Driver'
 
-export interface Driver {
-    id: string
-    name: string
-    available: boolean
-    isOnTheWay: boolean
-}
-
-export class Reservation {
+export class Ride {
     rider: Rider
     driver: Driver | null
     destination: string
     price: number
     isCanceled: boolean
+    date: Date
 
-    constructor(rider: Rider, destination: string) {
+    constructor(rider: Rider, destination: string, date: Date = new Date()) {
         this.rider = rider
         this.destination = destination
         this.driver = null
         this.price = 0
         this.isCanceled = false
+        this.date = date
     }
 
     assignDriver(driver: Driver) {

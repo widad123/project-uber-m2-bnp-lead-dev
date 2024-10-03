@@ -7,7 +7,7 @@ const knexConfig: Record<'development' | 'test', Knex.Config> = {
             host: '127.0.0.1',
             database: 'uber',
             user: 'postgres',
-            password: 'secret',
+            password: 'widad',
             port: 5432,
         },
         pool: {
@@ -25,7 +25,7 @@ const knexConfig: Record<'development' | 'test', Knex.Config> = {
             host: '127.0.0.1',
             database: 'uber',
             user: 'postgres',
-            password: 'secret',
+            password: 'widad',
             port: 5433,
         },
         pool: {
