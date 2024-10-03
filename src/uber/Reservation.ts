@@ -50,6 +50,10 @@ export class Reservation {
             return "Cancellation is free because it's your birthday!"
         }
 
+        if (this.driver) {
+            this.rider.balance -= 5
+        }
+
         this.isCanceled = true
         return 'Reservation canceled.'
     }

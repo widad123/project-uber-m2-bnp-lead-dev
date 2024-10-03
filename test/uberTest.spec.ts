@@ -4,7 +4,7 @@ describe('Rider Reservation', () => {
     test('should allow a rider to make a reservation if they have enough balance and no active reservation', () => {
         const rider: Rider = {
             id: 'rider1',
-            name: 'Khati',
+            name: 'John',
             balance: 100,
             birthday: new Date('1989-10-03'),
             activeReservation: null,
@@ -20,7 +20,7 @@ describe('Rider Reservation', () => {
     test('should prevent the rider from making a reservation if they have an active one', () => {
         const rider: Rider = {
             id: 'rider1',
-            name: 'Khati',
+            name: 'John',
             balance: 100,
             birthday: new Date('1989-10-03'),
             activeReservation: null,
@@ -42,7 +42,7 @@ describe('Rider Reservation', () => {
     test('should prevent the rider from making a reservation if their balance is too low', () => {
         const rider: Rider = {
             id: 'rider2',
-            name: 'Khati',
+            name: 'John',
             balance: 1,
             birthday: new Date('1989-10-03'),
             activeReservation: null,
@@ -58,7 +58,7 @@ describe('Rider Reservation', () => {
     test('should confirm the reservation only when a driver is assigned', () => {
         const rider: Rider = {
             id: 'rider3',
-            name: 'Khati',
+            name: 'John',
             balance: 100,
             birthday: new Date('1989-10-03'),
             activeReservation: null,
@@ -81,7 +81,7 @@ describe('Rider Reservation', () => {
     test('should allow a rider to make a new reservation only after canceling the previous one', () => {
         const rider: Rider = {
             id: 'rider4',
-            name: 'Khati',
+            name: 'John',
             balance: 100,
             birthday: new Date('1989-10-03'),
             activeReservation: null,
@@ -100,7 +100,7 @@ describe('Rider Reservation', () => {
         const today = new Date()
         const rider: Rider = {
             id: 'rider1',
-            name: 'Khati',
+            name: 'John',
             balance: 100,
             birthday: today,
             activeReservation: null,
@@ -115,6 +115,32 @@ describe('Rider Reservation', () => {
             "Cancellation is free because it's your birthday!"
         )
         expect(rider.balance).toBe(100)
+        expect(reservation.isCanceled).toBe(true)
+    })
+
+    test('should penalize the rider 5 euros if the driver is already on the way', () => {
+        const rider: Rider = {
+            id: 'rider2',
+            name: 'John',
+            balance: 100,
+            birthday: new Date('1989-10-01'),
+            activeReservation: null,
+        }
+
+        const driver: Driver = {
+            id: 'driver1',
+            name: 'Driver1',
+            available: true,
+        }
+
+        const reservation = new Reservation(rider, 'Paris')
+        reservation.assignDriver(driver)
+        rider.activeReservation = reservation
+
+        const cancellationMessage = reservation.cancel()
+
+        expect(cancellationMessage).toBe('Reservation canceled.')
+        expect(rider.balance).toBe(95)
         expect(reservation.isCanceled).toBe(true)
     })
 })
