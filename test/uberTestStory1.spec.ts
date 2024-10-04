@@ -1,171 +1,96 @@
-import { RideService } from '../src/services/RideService'
-import { RiderRepository } from '../src/repositories/RiderRepository'
-import { DriverRepository } from '../src/repositories/DriverRepository'
-import { RideRepository } from '../src/repositories/RideRepository'
-import { v4 as uuidv4 } from 'uuid'
+import { InMemoryRideRepository } from '../src/infrastructure/repositories/InMemoryRideRepository'
+import { InMemoryRiderRepository } from '../src/infrastructure/repositories/InMemoryRiderRepository'
+import { InMemoryDriverRepository } from '../src/infrastructure/repositories/InMemoryDriverRepository'
+import { BookRide } from '../src/core/usecases/BookRide'
+import { PriceCalculator } from '../src/core/usecases/PriceCalculator'
+import { Rider } from '../src/core/domain/models/Rider'
+import { Driver } from '../src/core/domain/models/Driver'
+import { Ride } from '../src/core/domain/models/Ride'
 
-describe('Rider Reservation', () => {
-    let rideService: RideService
-    let riderRepository: RiderRepository
-    let driverRepository: DriverRepository
-    let rideRepository: RideRepository
+describe('BookRide Usecase', () => {
+    let rideRepository: InMemoryRideRepository
+    let riderRepository: InMemoryRiderRepository
+    let driverRepository: InMemoryDriverRepository
+    let priceCalculator: PriceCalculator
+    let bookRide: BookRide
 
     beforeEach(() => {
-        riderRepository = new RiderRepository()
-        driverRepository = new DriverRepository()
-        rideRepository = new RideRepository()
-        rideService = new RideService(
+        rideRepository = new InMemoryRideRepository()
+        riderRepository = new InMemoryRiderRepository()
+        driverRepository = new InMemoryDriverRepository()
+        priceCalculator = new PriceCalculator(2)
+        bookRide = new BookRide(
             rideRepository,
             riderRepository,
-            driverRepository
+            driverRepository,
+            priceCalculator
         )
     })
 
-    test('should allow a rider to make a reservation if they have enough balance and no active reservation', async () => {
-        const riderId = uuidv4()
-        const rider = {
-            id: riderId,
-            name: 'John',
-            balance: 100,
-            birthday: new Date('1989-10-03'),
-            activeReservation: null,
-        }
+    test('should throw an error if rider has insufficient funds', async () => {
+        const rider = new Rider('1', 'John', 1, new Date('1990-01-01'))
+        riderRepository.addRider(rider)
 
-        await riderRepository.createRider(rider)
+        const driver = new Driver('2', 'Jane', true)
+        driverRepository.addDriver(driver)
 
-        const ride = await rideService.createRide(
-            rider.id,
+        await expect(
+            bookRide.execute('1', 'Paris', 'Paris', 10, true, false)
+        ).rejects.toThrow('Insufficient funds for the total price')
+    })
+
+    test('should throw an error if no driver is available', async () => {
+        const rider = new Rider('1', 'John', 100, new Date('1990-01-01'))
+        riderRepository.addRider(rider)
+
+        await expect(
+            bookRide.execute('1', 'Paris', 'Paris', 10, false, false)
+        ).rejects.toThrow('No available drivers')
+    })
+
+    test('should throw an error if rider has a pending ride', async () => {
+        const rider = new Rider('1', 'John', 100, new Date('1990-01-01'))
+        riderRepository.addRider(rider)
+
+        const driver = new Driver('2', 'Jane', true)
+        driverRepository.addDriver(driver)
+
+        const ride = new Ride(
+            'ride_1',
+            '1',
+            '2',
+            'Paris',
             'Paris',
             10,
+            5,
             false,
+            'pending'
+        )
+        await rideRepository.save(ride)
+
+        await expect(
+            bookRide.execute('1', 'Paris', 'Paris', 10, false, false)
+        ).rejects.toThrow(
+            'You have an active ride, cancel it before booking a new one.'
+        )
+    })
+
+    test('should book a ride successfully', async () => {
+        const rider = new Rider('1', 'John', 100, new Date('1990-01-01'))
+        riderRepository.addRider(rider)
+
+        const driver = new Driver('2', 'Jane', true)
+        driverRepository.addDriver(driver)
+
+        const rideId = await bookRide.execute(
+            '1',
+            'Paris',
+            'Paris',
+            10,
             false,
             false
         )
 
-        expect(rider.activeReservation).toBeNull()
-        expect(ride.destination).toBe('Paris')
-        expect(ride.isConfirmed()).toBe(false)
-    })
-
-    test('should prevent the rider from making a reservation if they have an active one', async () => {
-        const riderId = uuidv4()
-        const rider = {
-            id: riderId,
-            name: 'John',
-            balance: 100,
-            birthday: new Date('1989-10-03'),
-            activeReservation: null,
-        }
-
-        await riderRepository.createRider(rider)
-        await rideService.createRide(rider.id, 'Paris', 10, false, false, false)
-
-        const updatedRider = await riderRepository.getRiderById(rider.id)
-        expect(updatedRider?.activeReservation).not.toBeNull()
-
-        await expect(async () => {
-            await rideService.createRide(
-                rider.id,
-                'Paris',
-                10,
-                false,
-                false,
-                false
-            )
-        }).rejects.toThrow(
-            'Cannot make another reservation until the current one is canceled.'
-        )
-    })
-
-    test('should prevent the rider from making a reservation if their balance is too low', async () => {
-        const riderId = uuidv4()
-        const rider = {
-            id: riderId,
-            name: 'John',
-            balance: 1,
-            birthday: new Date('1989-10-03'),
-            activeReservation: null,
-        }
-
-        await riderRepository.createRider(rider)
-
-        await expect(async () => {
-            await rideService.createRide(
-                rider.id,
-                'Paris',
-                10,
-                false,
-                false,
-                false
-            )
-        }).rejects.toThrow('Insufficient balance for reservation.')
-    })
-
-    test('should confirm the reservation only when a driver is assigned', async () => {
-        const riderId = uuidv4()
-        const rider = {
-            id: riderId,
-            name: 'John',
-            balance: 100,
-            birthday: new Date('1989-10-03'),
-            activeReservation: null,
-        }
-
-        await riderRepository.createRider(rider)
-        const ride = await rideService.createRide(
-            rider.id,
-            'Paris',
-            10,
-            false,
-            false,
-            false
-        )
-
-        expect(ride.isConfirmed()).toBe(false)
-
-        const driver = {
-            id: uuidv4(),
-            name: 'Driver1',
-            available: true,
-            isOnTheWay: false,
-        }
-
-        ride.assignDriver(driver)
-
-        expect(ride.isConfirmed()).toBe(true)
-    })
-
-    test('should allow a rider to make a new reservation only after canceling the previous one', async () => {
-        const riderId = uuidv4()
-        const rider = {
-            id: riderId,
-            name: 'John',
-            balance: 100,
-            birthday: new Date('1989-10-03'),
-            activeReservation: null,
-        }
-
-        await riderRepository.createRider(rider)
-        const ride = await rideService.createRide(
-            rider.id,
-            'Paris',
-            10,
-            false,
-            false,
-            false
-        )
-
-        ride.cancel()
-
-        await expect(async () => {
-            await rideService.createRide(
-                rider.id,
-                'Paris',
-                10,
-                false,
-                false,
-                false
-            )
-        }).not.toThrow()
+        expect(rideId).toBeDefined()
     })
 })

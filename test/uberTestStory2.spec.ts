@@ -1,172 +1,109 @@
-import { RideService } from '../src/services/RideService'
-import { RiderRepository } from '../src/repositories/RiderRepository'
-import { DriverRepository } from '../src/repositories/DriverRepository'
-import { v4 as uuidv4 } from 'uuid'
-import { RideRepository } from '../src/repositories/RideRepository'
+import { InMemoryRideRepository } from '../src/infrastructure/repositories/InMemoryRideRepository'
+import { InMemoryRiderRepository } from '../src/infrastructure/repositories/InMemoryRiderRepository'
+import { CancelRide } from '../src/core/usecases/CancelRide'
+import { Ride } from '../src/core/domain/models/Ride'
+import { Rider } from '../src/core/domain/models/Rider'
 
-describe('Rider Reservation - Cancellation', () => {
-    let rideService: RideService
-    let riderRepository: RiderRepository
-    let driverRepository: DriverRepository
+describe('CancelRide Usecase', () => {
+    let rideRepository: InMemoryRideRepository
+    let riderRepository: InMemoryRiderRepository
+    let cancelRide: CancelRide
 
     beforeEach(() => {
-        riderRepository = new RiderRepository()
-        driverRepository = new DriverRepository()
-        rideService = new RideService(
-            new RideRepository(),
-            riderRepository,
-            driverRepository
+        rideRepository = new InMemoryRideRepository()
+        riderRepository = new InMemoryRiderRepository()
+        cancelRide = new CancelRide(rideRepository, riderRepository)
+    })
+
+    test('should throw an error if the ride is already cancelled', async () => {
+        const rider = new Rider('1', 'John', 50, new Date('1990-01-01'))
+        riderRepository.addRider(rider)
+
+        const ride = new Ride(
+            'ride_1',
+            '1',
+            null,
+            'Paris',
+            'Paris',
+            10,
+            12,
+            false,
+            'cancelled'
+        )
+        rideRepository.save(ride)
+
+        await expect(cancelRide.execute('1', 'ride_1')).rejects.toThrow(
+            'Ride has already been cancelled.'
         )
     })
 
-    test('should allow a rider to cancel the reservation for free on their birthday', async () => {
-        const today = new Date()
-        const rider = {
-            id: uuidv4(),
-            name: 'John',
-            balance: 100,
-            birthday: today,
-            activeReservation: null,
-        }
+    test('should cancel the ride with no penalty if it is the rider’s birthday', async () => {
+        const rider = new Rider('1', 'John', 50, new Date())
+        riderRepository.addRider(rider)
 
-        await riderRepository.createRider(rider)
-
-        const ride = await rideService.createRide(
-            rider.id,
+        const ride = new Ride(
+            'ride_1',
+            '1',
+            null,
+            'Paris',
             'Paris',
             10,
+            12,
             false,
-            false,
-            false
+            'confirmed'
         )
-        const cancellationMessage = ride.cancel()
+        rideRepository.save(ride)
 
-        expect(cancellationMessage).toBe(
-            "Cancellation is free because it's your birthday!"
-        )
-        expect(ride.isCanceled).toBe(true)
+        await cancelRide.execute('1', 'ride_1')
+
+        const updatedRide = await rideRepository.findById('ride_1')
+        expect(updatedRide?.status).toBe('cancelled')
+        expect(rider.balance).toBe(50)
     })
 
-    test('should penalize the rider 5 euros if the driver is already on the way', async () => {
-        const rider = {
-            id: uuidv4(),
-            name: 'John',
-            balance: 100,
-            birthday: new Date('1989-10-01'),
-            activeReservation: null,
-        }
+    test('should apply a 5 euro penalty if the driver is en route', async () => {
+        const rider = new Rider('1', 'John', 50, new Date('1990-01-01'))
+        riderRepository.addRider(rider)
 
-        await riderRepository.createRider(rider)
-        const ride = await rideService.createRide(
-            rider.id,
+        const ride = new Ride(
+            'ride_1',
+            '1',
+            'driver_1',
+            'Paris',
             'Paris',
             10,
+            12,
             false,
-            false,
-            false
+            'confirmed'
         )
+        rideRepository.save(ride)
 
-        const driver = {
-            id: uuidv4(),
-            name: 'Driver1',
-            available: true,
-            isOnTheWay: true,
-        }
+        await cancelRide.execute('1', 'ride_1')
 
-        ride.assignDriver(driver)
-
-        const cancellationMessage = ride.cancel()
-
-        const updatedRider = await riderRepository.getRiderById(rider.id)
-
-        expect(cancellationMessage).toBe('Reservation canceled.')
-        expect(updatedRider?.balance).toBe(95)
-        expect(ride.isCanceled).toBe(true)
+        const updatedRide = await rideRepository.findById('ride_1')
+        expect(updatedRide?.status).toBe('cancelled')
+        expect(rider.balance).toBe(45)
     })
 
-    test('should allow a rider to cancel the reservation without penalty if the driver is not assigned', async () => {
-        const rider = {
-            id: uuidv4(),
-            name: 'John',
-            balance: 100,
-            birthday: new Date('1989-10-01'),
-            activeReservation: null,
-        }
+    test('should throw an error if rider does not have enough funds to pay the penalty', async () => {
+        const rider = new Rider('1', 'John', 3, new Date('1990-01-01'))
+        riderRepository.addRider(rider)
 
-        await riderRepository.createRider(rider)
-        const ride = await rideService.createRide(
-            rider.id,
+        const ride = new Ride(
+            'ride_1',
+            '1',
+            'driver_1',
+            'Paris',
             'Paris',
             10,
+            12,
             false,
-            false,
-            false
+            'confirmed'
         )
+        rideRepository.save(ride)
 
-        const cancellationMessage = ride.cancel()
-
-        expect(cancellationMessage).toBe('Reservation canceled.')
-        expect(rider.balance).toBe(100)
-        expect(ride.isCanceled).toBe(true)
-    })
-
-    test('should allow a rider to cancel the reservation without penalty if the driver is assigned but not yet on the way', async () => {
-        const rider = {
-            id: uuidv4(),
-            name: 'John',
-            balance: 100,
-            birthday: new Date('1989-10-01'),
-            activeReservation: null,
-        }
-
-        await riderRepository.createRider(rider)
-        const ride = await rideService.createRide(
-            rider.id,
-            'Paris',
-            10,
-            false,
-            false,
-            false
+        await expect(cancelRide.execute('1', 'ride_1')).rejects.toThrow(
+            'Insufficient funds to cancel the ride with penalty.'
         )
-
-        const driver = {
-            id: uuidv4(),
-            name: 'Driver1',
-            available: true,
-            isOnTheWay: false,
-        }
-
-        ride.assignDriver(driver)
-
-        const cancellationMessage = ride.cancel()
-
-        expect(cancellationMessage).toBe('Reservation canceled.')
-        expect(rider.balance).toBe(100)
-        expect(ride.isCanceled).toBe(true)
-    })
-
-    test('should prevent the rider from canceling a reservation that has already been canceled', async () => {
-        const rider = {
-            id: uuidv4(),
-            name: 'John',
-            balance: 100,
-            birthday: new Date('1989-10-02'),
-            activeReservation: null,
-        }
-
-        await riderRepository.createRider(rider)
-        const ride = await rideService.createRide(
-            rider.id,
-            'Paris',
-            10,
-            false,
-            false,
-            false
-        )
-        ride.cancel()
-
-        expect(() => {
-            ride.cancel()
-        }).toThrow('Reservation is already canceled.')
     })
 })
