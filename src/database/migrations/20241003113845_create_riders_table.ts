@@ -6,6 +6,7 @@ exports.up = function (knex: Knex) {
         table.string('name').notNullable()
         table.decimal('balance').notNullable()
         table.date('birthday').notNullable()
+        table.uuid('activeReservation').nullable()
     })
 }
 

@@ -1,46 +1,56 @@
+import { RideService } from '../src/services/RideService'
 import { RideRepository } from '../src/repositories/RideRepository'
+import { RiderRepository } from '../src/repositories/RiderRepository'
+import { DriverRepository } from '../src/repositories/DriverRepository'
 import { v4 as uuidv4 } from 'uuid'
-import { Ride } from '../src/entities/Ride'
-import { Rider } from '../src/entities/Rider'
-import { Driver } from '../src/entities/Driver'
 
 describe('Rider Reservation - Listing Ride History', () => {
+    let rideService: RideService
     let rideRepository: RideRepository
+    let riderRepository: RiderRepository
+    let driverRepository: DriverRepository
 
     beforeEach(() => {
         rideRepository = new RideRepository()
+        riderRepository = new RiderRepository()
+        driverRepository = new DriverRepository()
+        rideService = new RideService(
+            rideRepository,
+            riderRepository,
+            driverRepository
+        )
     })
 
     test('should return all rides for a rider with driver information', async () => {
-        const rider: Rider = {
-            id: uuidv4(),
+        const riderId = uuidv4()
+        const driverId = uuidv4()
+
+        await riderRepository.createRider({
+            id: riderId,
             name: 'John',
             balance: 100,
-            birthday: new Date('1990-01-01'),
+            birthday: new Date('1989-10-03'),
             activeReservation: null,
-        }
+        })
 
-        await rideRepository.createRider(rider)
-
-        const driver: Driver = {
-            id: uuidv4(),
+        await driverRepository.createDriver({
+            id: driverId,
             name: 'Driver1',
             available: true,
             isOnTheWay: false,
-        }
+        })
 
-        await rideRepository.createDriver(driver)
+        await rideService.createRide(
+            riderId,
+            'Paris',
+            12.5,
+            false,
+            false,
+            false
+        )
+        await rideService.createRide(riderId, 'Lyon', 50, false, false, false)
 
-        const ride1 = new Ride(rider, 'Paris', 12.5, new Date())
-        ride1.assignDriver(driver)
-
-        const ride2 = new Ride(rider, 'Lyon', 50, new Date())
-        ride2.assignDriver(driver)
-
-        await rideRepository.createRide(ride1)
-        await rideRepository.createRide(ride2)
-
-        const rides = await rideRepository.getRidesByRider(rider.id)
+        const rides = await rideRepository.getRidesByRider(riderId)
 
         expect(rides.length).toBe(2)
         expect(rides[0]).toHaveProperty('driver_name', 'Driver1')
@@ -49,6 +59,13 @@ describe('Rider Reservation - Listing Ride History', () => {
 
     test('should return an empty list if the rider has no rides', async () => {
         const riderId = uuidv4()
+        await riderRepository.createRider({
+            id: riderId,
+            name: 'John',
+            balance: 100,
+            birthday: new Date('1990-01-01'),
+            activeReservation: null,
+        })
 
         const rides = await rideRepository.getRidesByRider(riderId)
 

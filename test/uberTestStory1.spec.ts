@@ -1,100 +1,171 @@
-import { Ride } from '../src/entities/Ride'
-import { Rider } from '../src/entities/Rider'
-import { Driver } from '../src/entities/Driver'
+import { RideService } from '../src/services/RideService'
+import { RiderRepository } from '../src/repositories/RiderRepository'
+import { DriverRepository } from '../src/repositories/DriverRepository'
+import { RideRepository } from '../src/repositories/RideRepository'
+import { v4 as uuidv4 } from 'uuid'
 
 describe('Rider Reservation', () => {
-    test('should allow a rider to make a reservation if they have enough balance and no active reservation', () => {
-        const rider: Rider = {
-            id: 'rider1',
-            name: 'John',
-            balance: 100,
-            birthday: new Date('1989-10-03'),
-            activeReservation: null,
-        }
+    let rideService: RideService
+    let riderRepository: RiderRepository
+    let driverRepository: DriverRepository
+    let rideRepository: RideRepository
 
-        const reservation = new Ride(rider, 'Paris', 10)
-
-        expect(rider.balance).toBeGreaterThanOrEqual(2)
-        expect(rider.activeReservation).toBeNull()
-        expect(reservation.destination).toBe('Paris')
+    beforeEach(() => {
+        riderRepository = new RiderRepository()
+        driverRepository = new DriverRepository()
+        rideRepository = new RideRepository()
+        rideService = new RideService(
+            rideRepository,
+            riderRepository,
+            driverRepository
+        )
     })
 
-    test('should prevent the rider from making a reservation if they have an active one', () => {
-        const rider: Rider = {
-            id: 'rider1',
+    test('should allow a rider to make a reservation if they have enough balance and no active reservation', async () => {
+        const riderId = uuidv4()
+        const rider = {
+            id: riderId,
             name: 'John',
             balance: 100,
             birthday: new Date('1989-10-03'),
             activeReservation: null,
         }
 
-        rider.activeReservation = new Ride(rider, 'Paris', 10)
+        await riderRepository.createRider(rider)
 
-        expect(rider.activeReservation).not.toBeNull()
-        expect(() => {
-            if (rider.activeReservation)
-                throw new Error(
-                    'Cannot make another reservation until the current one is canceled.'
-                )
-        }).toThrow(
+        const ride = await rideService.createRide(
+            rider.id,
+            'Paris',
+            10,
+            false,
+            false,
+            false
+        )
+
+        expect(rider.activeReservation).toBeNull()
+        expect(ride.destination).toBe('Paris')
+        expect(ride.isConfirmed()).toBe(false)
+    })
+
+    test('should prevent the rider from making a reservation if they have an active one', async () => {
+        const riderId = uuidv4()
+        const rider = {
+            id: riderId,
+            name: 'John',
+            balance: 100,
+            birthday: new Date('1989-10-03'),
+            activeReservation: null,
+        }
+
+        await riderRepository.createRider(rider)
+        await rideService.createRide(rider.id, 'Paris', 10, false, false, false)
+
+        const updatedRider = await riderRepository.getRiderById(rider.id)
+        expect(updatedRider?.activeReservation).not.toBeNull()
+
+        await expect(async () => {
+            await rideService.createRide(
+                rider.id,
+                'Paris',
+                10,
+                false,
+                false,
+                false
+            )
+        }).rejects.toThrow(
             'Cannot make another reservation until the current one is canceled.'
         )
     })
 
-    test('should prevent the rider from making a reservation if their balance is too low', () => {
-        const rider: Rider = {
-            id: 'rider2',
+    test('should prevent the rider from making a reservation if their balance is too low', async () => {
+        const riderId = uuidv4()
+        const rider = {
+            id: riderId,
             name: 'John',
             balance: 1,
             birthday: new Date('1989-10-03'),
             activeReservation: null,
         }
 
-        expect(rider.balance).toBeLessThan(2)
-        expect(() => {
-            if (rider.balance < 2)
-                throw new Error('Insufficient balance for reservation.')
-        }).toThrow('Insufficient balance for reservation.')
+        await riderRepository.createRider(rider)
+
+        await expect(async () => {
+            await rideService.createRide(
+                rider.id,
+                'Paris',
+                10,
+                false,
+                false,
+                false
+            )
+        }).rejects.toThrow('Insufficient balance for reservation.')
     })
 
-    test('should confirm the reservation only when a driver is assigned', () => {
-        const rider: Rider = {
-            id: 'rider3',
+    test('should confirm the reservation only when a driver is assigned', async () => {
+        const riderId = uuidv4()
+        const rider = {
+            id: riderId,
             name: 'John',
             balance: 100,
             birthday: new Date('1989-10-03'),
             activeReservation: null,
         }
 
-        const reservation = new Ride(rider, 'Paris', 10)
-        const driver: Driver = {
-            id: 'driver1',
+        await riderRepository.createRider(rider)
+        const ride = await rideService.createRide(
+            rider.id,
+            'Paris',
+            10,
+            false,
+            false,
+            false
+        )
+
+        expect(ride.isConfirmed()).toBe(false)
+
+        const driver = {
+            id: uuidv4(),
             name: 'Driver1',
             available: true,
             isOnTheWay: false,
         }
 
-        expect(reservation.isConfirmed()).toBe(false)
+        ride.assignDriver(driver)
 
-        reservation.assignDriver(driver)
-
-        expect(reservation.isConfirmed()).toBe(true)
+        expect(ride.isConfirmed()).toBe(true)
     })
-    test('should allow a rider to make a new reservation only after canceling the previous one', () => {
-        const rider: Rider = {
-            id: 'rider4',
+
+    test('should allow a rider to make a new reservation only after canceling the previous one', async () => {
+        const riderId = uuidv4()
+        const rider = {
+            id: riderId,
             name: 'John',
             balance: 100,
             birthday: new Date('1989-10-03'),
             activeReservation: null,
         }
 
-        rider.activeReservation = new Ride(rider, 'Paris', 10)
-        rider.activeReservation = null
-        const newReservation = new Ride(rider, 'Paris', 10)
+        await riderRepository.createRider(rider)
+        const ride = await rideService.createRide(
+            rider.id,
+            'Paris',
+            10,
+            false,
+            false,
+            false
+        )
 
-        expect(rider.activeReservation).toBeNull()
-        expect(newReservation).toBeInstanceOf(Ride)
-        expect(newReservation.destination).toBe('Paris')
+        ride.cancel()
+
+        await expect(async () => {
+            await rideService.createRide(
+                rider.id,
+                'Paris',
+                10,
+                false,
+                false,
+                false
+            )
+        }).not.toThrow()
     })
 })

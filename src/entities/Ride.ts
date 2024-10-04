@@ -33,17 +33,51 @@ export class Ride {
         return this.driver !== null
     }
 
+    calculatePrice(
+        isUberX: boolean,
+        isChristmas: boolean,
+        isWelcomeOffer: boolean
+    ): number {
+        const basePrice = this.getBasePrice()
+        const kmPrice = this.distance * 0.5
+        let totalPrice = basePrice + kmPrice
+
+        if (isUberX && !this.isRiderBirthday()) {
+            totalPrice += 5
+        }
+
+        if (isChristmas) {
+            totalPrice *= 2
+        }
+
+        if (isWelcomeOffer) {
+            totalPrice -= 20
+        }
+
+        return totalPrice > 0 ? totalPrice : 0
+    }
+
+    private getBasePrice(): number {
+        if (this.destination === 'Paris') {
+            return this.rider.activeReservation ? 2 : 10
+        }
+        return 0
+    }
+
+    private isRiderBirthday(): boolean {
+        const today = new Date()
+        return (
+            today.getDate() === this.rider.birthday.getDate() &&
+            today.getMonth() === this.rider.birthday.getMonth()
+        )
+    }
+
     cancel(): string {
         if (this.isCanceled) {
             throw new Error('Reservation is already canceled.')
         }
 
-        const today = new Date()
-        const isBirthday =
-            today.getDate() === this.rider.birthday.getDate() &&
-            today.getMonth() === this.rider.birthday.getMonth()
-
-        if (isBirthday) {
+        if (this.isRiderBirthday()) {
             this.isCanceled = true
             return "Cancellation is free because it's your birthday!"
         }
