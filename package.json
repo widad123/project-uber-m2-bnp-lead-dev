@@ -12,6 +12,7 @@
         "@types/express": "^5.0.0",
         "@types/jest": "^29.5.13",
         "@types/uuid": "^10.0.0",
+        "dotenv": "^16.4.5",
         "eslint": "^9.11.1",
         "eslint-config-prettier": "^9.1.0",
         "eslint-plugin-prettier": "^5.2.1",

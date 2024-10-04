@@ -26,4 +26,13 @@ export class InMemoryRideRepository implements RideRepository {
             this.rides[index] = ride
         }
     }
+
+    async findRideHistoryByRider(riderId: string): Promise<any[]> {
+        return this.rides
+            .filter((ride) => ride.riderId === riderId)
+            .map((ride) => ({
+                ...ride,
+                driverName: ride.driverId ? `Driver ${ride.driverId}` : null,
+            }))
+    }
 }

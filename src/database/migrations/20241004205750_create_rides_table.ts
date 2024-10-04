@@ -20,7 +20,7 @@ export async function up(knex: Knex): Promise<void> {
         table.decimal('distance', 10, 2).notNullable()
         table.decimal('price', 10, 2).notNullable()
         table
-            .enum('status', ['pending', 'confirmed', 'cancelled'])
+            .enum('status', ['pending', 'confirmed', 'completed', 'cancelled'])
             .defaultTo('pending')
         table.boolean('is_uberx').defaultTo(false)
         table.timestamps(true, true)

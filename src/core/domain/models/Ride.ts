@@ -8,7 +8,7 @@ export class Ride {
         public distance: number,
         public price: number,
         public isUberX: boolean = false,
-        public status: 'pending' | 'confirmed' | 'cancelled'
+        public status: 'pending' | 'confirmed' | 'completed' | 'cancelled'
     ) {}
 
     isPending(): boolean {

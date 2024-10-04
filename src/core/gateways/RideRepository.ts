@@ -4,4 +4,5 @@ export interface RideRepository {
     save(ride: Ride): Promise<void>
     findById(rideId: string): Promise<Ride | null>
     findPendingRideByRider(riderId: string): Promise<Ride | null>
+    findRideHistoryByRider(riderId: string): Promise<any[]>
 }
