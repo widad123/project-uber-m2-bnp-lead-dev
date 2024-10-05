@@ -3,20 +3,21 @@ import { RiderRepository } from '../gateways/RiderRepository'
 import { DriverRepository } from '../gateways/DriverRepository'
 import { PriceCalculator } from './PriceCalculator'
 import { Ride } from '../domain/models/Ride'
+import { GoogleDistance } from './GoogleDistance'
 
 export class BookRide {
     constructor(
         private rideRepository: RideRepository,
         private riderRepository: RiderRepository,
         private driverRepository: DriverRepository,
-        private priceCalculator: PriceCalculator
+        private priceCalculator: PriceCalculator,
+        private googleDistance: GoogleDistance
     ) {}
 
     async execute(
         riderId: string,
         origin: string,
         destination: string,
-        distance: number,
         isUberX: boolean,
         isChristmas: boolean
     ): Promise<string> {
@@ -38,6 +39,11 @@ export class BookRide {
         if (!availableDriver) {
             throw new Error('No available drivers.')
         }
+
+        const distance = await this.googleDistance.getDistance(
+            origin,
+            destination
+        )
 
         const price = this.priceCalculator.calculatePrice(
             rider,

@@ -6,11 +6,13 @@ import { PriceCalculator } from '../src/core/usecases/PriceCalculator'
 import { Rider } from '../src/core/domain/models/Rider'
 import { Driver } from '../src/core/domain/models/Driver'
 import { Ride } from '../src/core/domain/models/Ride'
+import { GoogleDistance } from '../src/core/usecases/GoogleDistance'
 
 describe('BookRide Usecase', () => {
     let rideRepository: InMemoryRideRepository
     let riderRepository: InMemoryRiderRepository
     let driverRepository: InMemoryDriverRepository
+    let googleDistance: GoogleDistance
     let priceCalculator: PriceCalculator
     let bookRide: BookRide
 
@@ -18,12 +20,14 @@ describe('BookRide Usecase', () => {
         rideRepository = new InMemoryRideRepository()
         riderRepository = new InMemoryRiderRepository()
         driverRepository = new InMemoryDriverRepository()
+        googleDistance = new GoogleDistance()
         priceCalculator = new PriceCalculator(2)
         bookRide = new BookRide(
             rideRepository,
             riderRepository,
             driverRepository,
-            priceCalculator
+            priceCalculator,
+            googleDistance
         )
     })
 
@@ -35,7 +39,7 @@ describe('BookRide Usecase', () => {
         driverRepository.addDriver(driver)
 
         await expect(
-            bookRide.execute('1', 'Paris', 'Paris', 10, true, false)
+            bookRide.execute('1', 'Paris', 'Paris', true, false)
         ).rejects.toThrow('Insufficient funds for the total price')
     })
 
@@ -44,7 +48,7 @@ describe('BookRide Usecase', () => {
         riderRepository.addRider(rider)
 
         await expect(
-            bookRide.execute('1', 'Paris', 'Paris', 10, false, false)
+            bookRide.execute('1', 'Paris', 'Paris', false, false)
         ).rejects.toThrow('No available drivers')
     })
 
@@ -69,7 +73,7 @@ describe('BookRide Usecase', () => {
         await rideRepository.save(ride)
 
         await expect(
-            bookRide.execute('1', 'Paris', 'Paris', 10, false, false)
+            bookRide.execute('1', 'Paris', 'Paris', false, false)
         ).rejects.toThrow(
             'You have an active ride, cancel it before booking a new one.'
         )
@@ -86,7 +90,6 @@ describe('BookRide Usecase', () => {
             '1',
             'Paris',
             'Paris',
-            10,
             false,
             false
         )
