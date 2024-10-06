@@ -10,23 +10,63 @@ export class KnexRideRepository implements RideRepository {
     }
 
     async findById(rideId: string): Promise<Ride | null> {
-        const ride = await this.knex('rides').where('id', rideId).first()
-        return ride || null
+        const rideData = await this.knex('rides').where('id', rideId).first()
+
+        return rideData
+            ? new Ride(
+                  rideData.id,
+                  rideData.rider_id,
+                  rideData.driver_id,
+                  rideData.origin,
+                  rideData.destination,
+                  rideData.distance,
+                  rideData.price,
+                  rideData.is_uberx,
+                  rideData.status
+              )
+            : null
     }
 
-    async findPendingRideByRider(riderId: string): Promise<Ride | null> {
-        const ride = await this.knex('rides')
-            .where({ riderId, status: 'pending' })
+    async findPendingRideByRider(rider_id: string): Promise<Ride | null> {
+        const rideData = await this.knex('rides')
+            .where(function () {
+                this.where({ rider_id, status: 'pending' }).orWhere({
+                    rider_id,
+                    status: 'confirmed',
+                })
+            })
             .first()
-        return ride || null
+
+        if (rideData && rideData.rider_id && rideData.status) {
+            return new Ride(
+                rideData.id,
+                rideData.rider_id,
+                rideData.driver_id,
+                rideData.origin,
+                rideData.destination,
+                rideData.distance,
+                rideData.price,
+                rideData.is_uberx,
+                rideData.status
+            )
+        }
+
+        return null
     }
 
-    async findRideHistoryByRider(riderId: string): Promise<any[]> {
+    async findRideHistoryByRider(rider_id: string): Promise<Ride[]> {
         const rides = await this.knex('rides')
             .select('rides.*', 'drivers.name as driverName')
             .leftJoin('drivers', 'rides.driver_id', 'drivers.id')
-            .where('rides.rider_id', riderId)
+            .where('rides.rider_id', rider_id)
 
         return rides
+    }
+
+    async update(ride: Ride): Promise<void> {
+        await this.knex('rides').where({ id: ride.id }).update({
+            status: ride.status,
+            updated_at: new Date(),
+        })
     }
 }

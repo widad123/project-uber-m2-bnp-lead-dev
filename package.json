@@ -6,7 +6,11 @@
     "scripts": {
         "test": "jest --config test/jest-unit.json",
         "test:it": "jest --config test/jest-integration.json",
-        "knex": "knex --knexfile=\"src/database/knexfile.ts\""
+        "knex": "knex --knexfile=\"src/database/knexfile.ts\"",
+        "seed": "knex seed:run --knexfile=\"src/database/knexfile.ts\"",
+        "cli": "ts-node src/cli/index.ts",
+        "api": "ts-node src/api/server.ts",
+        "bot": "ts-node src/bot/discordBot.ts"
     },
     "devDependencies": {
         "@types/express": "^5.0.0",
@@ -28,8 +32,10 @@
     },
     "dependencies": {
         "axios": "^1.7.7",
+        "discord.js": "^14.16.3",
         "knex": "^3.1.0",
         "pg": "^8.13.0",
+        "sqlite3": "^5.1.7",
         "uuid": "^10.0.0"
     }
 }

@@ -7,11 +7,11 @@ const knexConfig: Record<'development' | 'test', Knex.Config> = {
     development: {
         client: 'postgresql',
         connection: {
-            host: process.env.DB_HOST,
-            user: process.env.DB_USER,
-            password: process.env.DB_PASSWORD,
-            database: process.env.DB_NAME,
-            port: Number(process.env.DB_PORT),
+            host: 'localhost',
+            user: 'postgres',
+            password: 'widad',
+            database: 'uber',
+            port: 5432,
         },
         pool: {
             min: 2,
@@ -20,6 +20,9 @@ const knexConfig: Record<'development' | 'test', Knex.Config> = {
         migrations: {
             tableName: 'knex_migrations',
             directory: __dirname + '/migrations/',
+        },
+        seeds: {
+            directory: __dirname + '/seeds',
         },
     },
     test: {
@@ -27,9 +30,9 @@ const knexConfig: Record<'development' | 'test', Knex.Config> = {
         connection: {
             host: process.env.DB_HOST,
             user: process.env.DB_USER,
-            password: process.env.DB_PASSWORD,
+            password: String(process.env.DB_PASSWORD),
             database: process.env.DB_NAME,
-            port: Number(process.env.DB_PORT),
+            port: Number(process.env.DB_PORT) || 5432,
         },
         pool: {
             min: 2,
@@ -38,6 +41,9 @@ const knexConfig: Record<'development' | 'test', Knex.Config> = {
         migrations: {
             tableName: 'knex_migrations',
             directory: __dirname + '/migrations/',
+        },
+        seeds: {
+            directory: __dirname + '/seeds',
         },
     },
 }

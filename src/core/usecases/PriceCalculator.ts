@@ -14,33 +14,27 @@ export class PriceCalculator {
         origin: string,
         destination: string,
         distance: number,
-        isUberX: boolean,
+        is_uberx: boolean,
         isChristmas: boolean
     ): number {
         const basePrice = this.getBasePrice(origin, destination)
-        console.log('Base price:', basePrice)
 
         let totalPrice = basePrice + this.pricePerKm * distance
-        console.log('Total price after distance:', totalPrice)
 
-        if (isUberX && !this.isRiderBirthday(rider)) {
+        if (is_uberx && !this.isRiderBirthday(rider)) {
             totalPrice += this.uberXSupplement
-            console.log('Total price after UberX supplement:', totalPrice)
         }
 
         if (isChristmas) {
             totalPrice *= this.christmasMultiplier
-            console.log('Total price after Christmas multiplier:', totalPrice)
         }
 
         if (this.isRiderBirthday(rider)) {
             totalPrice = Math.max(totalPrice - this.uberXSupplement, 0)
-            console.log('Total price after birthday offer:', totalPrice)
         }
 
         if (rider.isFirstRide && totalPrice > this.welcomeOffer) {
             totalPrice = Math.max(totalPrice - this.welcomeOffer, 0)
-            console.log('Total price after welcome offer:', totalPrice)
         }
 
         return Math.max(totalPrice, 0)

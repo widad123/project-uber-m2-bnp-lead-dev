@@ -8,13 +8,13 @@ export class CancelRide {
         private riderRepository: RiderRepository
     ) {}
 
-    async execute(riderId: string, rideId: string): Promise<void> {
+    async execute(rider_id: string, rideId: string): Promise<void> {
         const ride = await this.rideRepository.findById(rideId)
         if (!ride) {
             throw new Error('Ride not found.')
         }
 
-        if (ride.riderId !== riderId) {
+        if (ride.rider_id !== rider_id) {
             throw new Error('This ride does not belong to the rider.')
         }
 
@@ -22,7 +22,7 @@ export class CancelRide {
             throw new Error('Ride has already been cancelled.')
         }
 
-        const rider = await this.riderRepository.findById(riderId)
+        const rider = await this.riderRepository.findById(rider_id)
         if (!rider) {
             throw new Error('Rider not found.')
         }
@@ -41,7 +41,7 @@ export class CancelRide {
             ride.cancelRide()
         }
 
-        await this.rideRepository
+        await this.rideRepository.update(ride)
     }
 
     private isRiderBirthday(rider: Rider): boolean {

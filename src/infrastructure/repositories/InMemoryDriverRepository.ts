@@ -5,7 +5,7 @@ export class InMemoryDriverRepository implements DriverRepository {
     private drivers: Driver[] = []
 
     async findAvailableDriver(): Promise<Driver | null> {
-        return this.drivers.find((driver) => driver.isAvailable) || null
+        return this.drivers.find((driver) => driver.is_available) || null
     }
 
     addDriver(driver: Driver): void {

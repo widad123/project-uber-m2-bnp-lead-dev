@@ -11,7 +11,7 @@ describe('ViewRideHistory Usecase', () => {
     let viewRideHistory: ViewRideHistory
     let uuidGenerator: UuidGeneratorImpl
     let dateProvider: DateProviderImpl
-    let specificRiderId: string
+    let specificrider_id: string
 
     beforeAll(async () => {
         knexConnection = knex(knexConfig.test)
@@ -20,29 +20,29 @@ describe('ViewRideHistory Usecase', () => {
         uuidGenerator = new UuidGeneratorImpl()
         dateProvider = new DateProviderImpl()
 
-        specificRiderId = uuidGenerator.generate()
-        const driverId1 = uuidGenerator.generate()
-        const driverId2 = uuidGenerator.generate()
+        specificrider_id = uuidGenerator.generate()
+        const driver_id1 = uuidGenerator.generate()
+        const driver_id2 = uuidGenerator.generate()
 
         const now = dateProvider.now()
 
         await knexConnection('riders').insert([
             {
-                id: specificRiderId,
+                id: specificrider_id,
                 name: 'John',
                 balance: 50,
                 birthday: '1990-01-01',
             },
         ])
         await knexConnection('drivers').insert([
-            { id: driverId1, name: 'Jane' },
-            { id: driverId2, name: 'Doe' },
+            { id: driver_id1, name: 'Jane' },
+            { id: driver_id2, name: 'Doe' },
         ])
         await knexConnection('rides').insert([
             {
                 id: uuidGenerator.generate(),
-                rider_id: specificRiderId,
-                driver_id: driverId1,
+                rider_id: specificrider_id,
+                driver_id: driver_id1,
                 origin: 'Paris',
                 destination: 'Paris',
                 distance: '5.00',
@@ -54,8 +54,8 @@ describe('ViewRideHistory Usecase', () => {
             },
             {
                 id: uuidGenerator.generate(),
-                rider_id: specificRiderId,
-                driver_id: driverId2,
+                rider_id: specificrider_id,
+                driver_id: driver_id2,
                 origin: 'Paris',
                 destination: 'Lyon',
                 distance: '15.00',
@@ -76,12 +76,12 @@ describe('ViewRideHistory Usecase', () => {
     })
 
     test('should return the ride history with drivers for a given rider', async () => {
-        const rideHistory = await viewRideHistory.execute(specificRiderId)
+        const rideHistory = await viewRideHistory.execute(specificrider_id)
 
         expect(rideHistory).toEqual([
             {
                 id: expect.any(String),
-                rider_id: specificRiderId,
+                rider_id: specificrider_id,
                 driver_id: expect.any(String),
                 origin: 'Paris',
                 destination: 'Paris',
@@ -95,7 +95,7 @@ describe('ViewRideHistory Usecase', () => {
             },
             {
                 id: expect.any(String),
-                rider_id: specificRiderId,
+                rider_id: specificrider_id,
                 driver_id: expect.any(String),
                 origin: 'Paris',
                 destination: 'Lyon',
@@ -111,16 +111,16 @@ describe('ViewRideHistory Usecase', () => {
     })
 
     test('should return an empty list if the rider has no rides', async () => {
-        const newRiderId = uuidGenerator.generate()
+        const newrider_id = uuidGenerator.generate()
         await knexConnection('riders').insert([
             {
-                id: newRiderId,
+                id: newrider_id,
                 name: 'Mark',
                 balance: 50,
                 birthday: '1995-02-02',
             },
         ])
-        const rideHistory = await viewRideHistory.execute(newRiderId)
+        const rideHistory = await viewRideHistory.execute(newrider_id)
         expect(rideHistory).toEqual([])
     })
 })

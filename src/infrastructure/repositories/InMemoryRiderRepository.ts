@@ -4,8 +4,8 @@ import { Rider } from '../../core/domain/models/Rider'
 export class InMemoryRiderRepository implements RiderRepository {
     private riders: Rider[] = []
 
-    async findById(riderId: string): Promise<Rider | null> {
-        return this.riders.find((rider) => rider.id === riderId) || null
+    async findById(rider_id: string): Promise<Rider | null> {
+        return this.riders.find((rider) => rider.id === rider_id) || null
     }
 
     addRider(rider: Rider): void {

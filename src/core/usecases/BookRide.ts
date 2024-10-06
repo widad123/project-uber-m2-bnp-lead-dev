@@ -4,6 +4,7 @@ import { DriverRepository } from '../gateways/DriverRepository'
 import { PriceCalculator } from './PriceCalculator'
 import { Ride } from '../domain/models/Ride'
 import { GoogleDistance } from './GoogleDistance'
+import { UuidGenerator } from '../../utils/UuidGenerator'
 
 export class BookRide {
     constructor(
@@ -11,23 +12,24 @@ export class BookRide {
         private riderRepository: RiderRepository,
         private driverRepository: DriverRepository,
         private priceCalculator: PriceCalculator,
-        private googleDistance: GoogleDistance
+        private googleDistance: GoogleDistance,
+        private uuidGenerator: UuidGenerator
     ) {}
 
     async execute(
-        riderId: string,
+        rider_id: string,
         origin: string,
         destination: string,
-        isUberX: boolean,
+        is_uberx: boolean,
         isChristmas: boolean
     ): Promise<string> {
-        const rider = await this.riderRepository.findById(riderId)
+        const rider = await this.riderRepository.findById(rider_id)
         if (!rider) {
             throw new Error('Rider not found.')
         }
 
         const existingRide =
-            await this.rideRepository.findPendingRideByRider(riderId)
+            await this.rideRepository.findPendingRideByRider(rider_id)
         if (existingRide) {
             throw new Error(
                 'You have an active ride, cancel it before booking a new one.'
@@ -50,26 +52,25 @@ export class BookRide {
             origin,
             destination,
             distance,
-            isUberX,
+            is_uberx,
             isChristmas
         )
-        console.log('Calculated price before reductions:', price)
 
-        console.log('Total price:', price)
-        console.log('Rider balance:', rider.balance)
         if (!rider.hasSufficientFunds(price)) {
             throw new Error('Insufficient funds for the total price')
         }
 
+        const rideId = this.uuidGenerator.generate()
+
         const ride = new Ride(
-            'ride_id',
-            riderId,
+            rideId,
+            rider_id,
             availableDriver.id,
             origin,
             destination,
             distance,
             price,
-            isUberX,
+            is_uberx,
             'confirmed'
         )
 

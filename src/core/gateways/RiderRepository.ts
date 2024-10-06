@@ -1,5 +1,5 @@
 import { Rider } from '../domain/models/Rider'
 
 export interface RiderRepository {
-    findById(riderId: string): Promise<Rider | null>
+    findById(rider_id: string): Promise<Rider | null>
 }

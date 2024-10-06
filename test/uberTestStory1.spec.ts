@@ -7,6 +7,7 @@ import { Rider } from '../src/core/domain/models/Rider'
 import { Driver } from '../src/core/domain/models/Driver'
 import { Ride } from '../src/core/domain/models/Ride'
 import { GoogleDistance } from '../src/core/usecases/GoogleDistance'
+import { UuidGeneratorImpl } from '../src/utils/UuidGeneratorImpl'
 
 describe('BookRide Usecase', () => {
     let rideRepository: InMemoryRideRepository
@@ -15,6 +16,7 @@ describe('BookRide Usecase', () => {
     let googleDistance: GoogleDistance
     let priceCalculator: PriceCalculator
     let bookRide: BookRide
+    let uuidGenerator: UuidGeneratorImpl
 
     beforeEach(() => {
         rideRepository = new InMemoryRideRepository()
@@ -22,12 +24,14 @@ describe('BookRide Usecase', () => {
         driverRepository = new InMemoryDriverRepository()
         googleDistance = new GoogleDistance()
         priceCalculator = new PriceCalculator(2)
+        uuidGenerator = new UuidGeneratorImpl()
         bookRide = new BookRide(
             rideRepository,
             riderRepository,
             driverRepository,
             priceCalculator,
-            googleDistance
+            googleDistance,
+            uuidGenerator
         )
     })
 

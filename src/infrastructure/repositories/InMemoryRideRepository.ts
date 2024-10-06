@@ -12,10 +12,10 @@ export class InMemoryRideRepository implements RideRepository {
         return this.rides.find((ride) => ride.id === rideId) || null
     }
 
-    async findPendingRideByRider(riderId: string): Promise<Ride | null> {
+    async findPendingRideByRider(rider_id: string): Promise<Ride | null> {
         return (
             this.rides.find(
-                (ride) => ride.riderId === riderId && ride.isPending()
+                (ride) => ride.rider_id === rider_id && ride.isPending()
             ) || null
         )
     }
@@ -27,12 +27,12 @@ export class InMemoryRideRepository implements RideRepository {
         }
     }
 
-    async findRideHistoryByRider(riderId: string): Promise<any[]> {
+    async findRideHistoryByRider(rider_id: string): Promise<any[]> {
         return this.rides
-            .filter((ride) => ride.riderId === riderId)
+            .filter((ride) => ride.rider_id === rider_id)
             .map((ride) => ({
                 ...ride,
-                driverName: ride.driverId ? `Driver ${ride.driverId}` : null,
+                driverName: ride.driver_id ? `Driver ${ride.driver_id}` : null,
             }))
     }
 }
