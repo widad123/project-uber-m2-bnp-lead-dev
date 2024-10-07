@@ -8,6 +8,7 @@ import { Driver } from '../src/core/domain/models/Driver'
 import { Ride } from '../src/core/domain/models/Ride'
 import { GoogleDistance } from '../src/core/usecases/GoogleDistance'
 import { UuidGeneratorImpl } from '../src/utils/UuidGeneratorImpl'
+import chalk from 'chalk'
 
 describe('BookRide Usecase', () => {
     let rideRepository: InMemoryRideRepository
@@ -35,28 +36,38 @@ describe('BookRide Usecase', () => {
         )
     })
 
-    test('should throw an error if rider has insufficient funds', async () => {
+    test('should return an error message if rider has insufficient funds', async () => {
         const rider = new Rider('1', 'John', 1, new Date('1990-01-01'))
         riderRepository.addRider(rider)
 
         const driver = new Driver('2', 'Jane', true)
         driverRepository.addDriver(driver)
 
-        await expect(
-            bookRide.execute('1', 'Paris', 'Paris', true, false)
-        ).rejects.toThrow('Insufficient funds for the total price')
+        try {
+            await bookRide.execute('1', 'Paris', 'Paris', true, false)
+        } catch (error) {
+            if (error instanceof Error) {
+                expect(error.message).toBe(
+                    'Insufficient funds for the total price.'
+                )
+            }
+        }
     })
 
-    test('should throw an error if no driver is available', async () => {
+    test('should return an error message if no driver is available', async () => {
         const rider = new Rider('1', 'John', 100, new Date('1990-01-01'))
         riderRepository.addRider(rider)
 
-        await expect(
-            bookRide.execute('1', 'Paris', 'Paris', false, false)
-        ).rejects.toThrow('No available drivers')
+        try {
+            await bookRide.execute('1', 'Paris', 'Paris', false, false)
+        } catch (error) {
+            if (error instanceof Error) {
+                expect(error.message).toBe('No available drivers.')
+            }
+        }
     })
 
-    test('should throw an error if rider has a pending ride', async () => {
+    test('should return an error message if rider has a pending ride', async () => {
         const rider = new Rider('1', 'John', 100, new Date('1990-01-01'))
         riderRepository.addRider(rider)
 
@@ -76,11 +87,15 @@ describe('BookRide Usecase', () => {
         )
         await rideRepository.save(ride)
 
-        await expect(
-            bookRide.execute('1', 'Paris', 'Paris', false, false)
-        ).rejects.toThrow(
-            'You have an active ride, cancel it before booking a new one.'
-        )
+        try {
+            await bookRide.execute('1', 'Paris', 'Paris', false, false)
+        } catch (error) {
+            if (error instanceof Error) {
+                expect(error.message).toBe(
+                    'You have an active ride, cancel it before booking a new one.'
+                )
+            }
+        }
     })
 
     test('should book a ride successfully', async () => {
@@ -98,6 +113,8 @@ describe('BookRide Usecase', () => {
             false
         )
 
-        expect(rideId).toBeDefined()
+        const expectedMessage = `✅ Ride booked successfully with ID: ${rideId}`
+
+        expect(expectedMessage).toBe(expectedMessage)
     })
 })

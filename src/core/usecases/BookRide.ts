@@ -57,7 +57,7 @@ export class BookRide {
         )
 
         if (!rider.hasSufficientFunds(price)) {
-            throw new Error('Insufficient funds for the total price')
+            throw new Error('Insufficient funds for the total price.')
         }
 
         const rideId = this.uuidGenerator.generate()

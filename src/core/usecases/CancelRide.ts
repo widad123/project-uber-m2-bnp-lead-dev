@@ -1,6 +1,7 @@
 import { RideRepository } from '../gateways/RideRepository'
 import { RiderRepository } from '../gateways/RiderRepository'
 import { Rider } from '../domain/models/Rider'
+import chalk from 'chalk'
 
 export class CancelRide {
     constructor(
@@ -8,23 +9,32 @@ export class CancelRide {
         private riderRepository: RiderRepository
     ) {}
 
-    async execute(rider_id: string, rideId: string): Promise<void> {
+    async execute(
+        rider_id: string,
+        rideId: string
+    ): Promise<{ message: string }> {
         const ride = await this.rideRepository.findById(rideId)
         if (!ride) {
-            throw new Error('Ride not found.')
+            return { message: chalk.red('❌ Ride not found.') }
         }
 
         if (ride.rider_id !== rider_id) {
-            throw new Error('This ride does not belong to the rider.')
+            return {
+                message: chalk.red(
+                    '❌ This ride does not belong to the rider.'
+                ),
+            }
         }
 
         if (ride.status === 'cancelled') {
-            throw new Error('Ride has already been cancelled.')
+            return {
+                message: chalk.yellow('⚠️ Ride has already been cancelled.'),
+            }
         }
 
         const rider = await this.riderRepository.findById(rider_id)
         if (!rider) {
-            throw new Error('Rider not found.')
+            return { message: chalk.red('❌ Rider not found.') }
         }
 
         if (this.isRiderBirthday(rider)) {
@@ -32,9 +42,11 @@ export class CancelRide {
         } else {
             if (ride.status === 'confirmed') {
                 if (!rider.hasSufficientFunds(5)) {
-                    throw new Error(
-                        'Insufficient funds to cancel the ride with penalty.'
-                    )
+                    return {
+                        message: chalk.red(
+                            '❌ Insufficient funds to cancel the ride with penalty.'
+                        ),
+                    }
                 }
                 rider.balance -= 5
             }
@@ -42,6 +54,11 @@ export class CancelRide {
         }
 
         await this.rideRepository.update(ride)
+        return {
+            message: chalk.green(
+                `✅ Ride ${rideId} has been cancelled successfully.`
+            ),
+        }
     }
 
     private isRiderBirthday(rider: Rider): boolean {

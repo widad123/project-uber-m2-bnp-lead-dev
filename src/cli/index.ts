@@ -11,6 +11,7 @@ import { UuidGeneratorImpl } from '../utils/UuidGeneratorImpl'
 import knex from 'knex'
 import knexConfig from '../database/knexfile'
 import { Rider } from '../core/domain/models/Rider'
+import chalk from 'chalk'
 
 const program = new Command()
 
@@ -56,17 +57,13 @@ program
                     isChristmas === 'true'
                 )
 
-                console.log(`Ride booked successfully with ID: ${rideId}`)
+                console.log(
+                    chalk.green(
+                        `✅ Ride booked successfully with ID: ${rideId}`
+                    )
+                )
             } catch (error: any) {
-                if (error instanceof Error) {
-                    console.error(`Error: ${error.message}`)
-                    console.dir(error)
-                } else if (typeof error === 'string') {
-                    console.error(`Error: ${error}`)
-                } else {
-                    console.error('An unknown error occurred')
-                    console.dir(error)
-                }
+                console.error(chalk.red(`❌ ${error.message}`))
             }
         }
     )
@@ -75,18 +72,41 @@ program
     .command('cancel <rider_id> <rideId>')
     .description('Cancel a ride for a rider')
     .action(async (rider_id, rideId) => {
-        const cancelRide = new CancelRide(rideRepository, riderRepository)
-        await cancelRide.execute(rider_id, rideId)
-        console.log(`Ride ${rideId} has been cancelled`)
+        try {
+            const cancelRide = new CancelRide(rideRepository, riderRepository)
+            await cancelRide.execute(rider_id, rideId)
+            console.log(chalk.green(`✅ Ride ${rideId} has been cancelled`))
+        } catch (error: any) {
+            console.error(
+                chalk.red(`❌ Error cancelling ride: ${error.message}`)
+            )
+        }
     })
 
 program
     .command('history <rider_id>')
     .description('View ride history for a rider')
     .action(async (rider_id) => {
-        const viewRideHistory = new ViewRideHistory(rideRepository)
-        const history = await viewRideHistory.execute(rider_id)
-        console.log(history)
+        try {
+            const viewRideHistory = new ViewRideHistory(rideRepository)
+            const history = await viewRideHistory.execute(rider_id)
+            if (history.length === 0) {
+                console.log(
+                    chalk.yellow(
+                        `⚠️ No ride history found for rider ID: ${rider_id}`
+                    )
+                )
+            } else {
+                console.log(
+                    chalk.green(`📝 Ride history for rider ID: ${rider_id}`)
+                )
+                console.log(history)
+            }
+        } catch (error: any) {
+            console.error(
+                chalk.red(`❌ Error fetching ride history: ${error.message}`)
+            )
+        }
     })
 
 program
@@ -104,9 +124,15 @@ program
 
             await riderRepository.save(rider)
 
-            console.log(`Rider created successfully with ID: ${rider_id}`)
+            console.log(
+                chalk.green(
+                    `✅ Rider created successfully with ID: ${rider_id}`
+                )
+            )
         } catch (error: any) {
-            console.error(`Error creating rider: ${error.message}`)
+            console.error(
+                chalk.red(`❌ Error creating rider: ${error.message}`)
+            )
         }
     })
 
